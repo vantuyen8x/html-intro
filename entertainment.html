@@ -64,32 +64,21 @@
       catch (e) { return []; }
     }
 
-    function renderPlaylist() {
-      const ul = document.getElementById("playlist");
-      ul.innerHTML = "";
-      const songs = loadSaved();
-      if (songs.length === 0) {
-        ul.innerHTML = "<li class='muted'>Chưa có bài nào.</li>";
-        return;
-      }
-      songs.forEach(function (url, i) {
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = "#";
-        a.textContent = "Bài " + (i + 1) + " (" + getVideoId(url) + ")";
-        a.onclick = function (e) { e.preventDefault(); play(url); };
-        const del = document.createElement("button");
-        del.textContent = "Xóa";
-        del.style.marginLeft = "8px";
-        del.onclick = function () {
-          const s = loadSaved(); s.splice(i, 1);
-          localStorage.setItem("songs", JSON.stringify(s));
-          renderPlaylist();
-        };
-        li.append(a, del);
-        ul.appendChild(li);
-      });
-    }
+    function play(url) {
+  const id = getVideoId(url);
+  const player = document.getElementById("player");
+  if (!id) {
+    player.textContent = "Link không hợp lệ, hãy copy lại từ YouTube.";
+    return;
+  }
+  player.innerHTML = "";
+  const frame = document.createElement("iframe");
+  frame.src = "https://www.youtube.com/embed/" + id + "?autoplay=1&rel=0";
+  frame.allow = "autoplay; encrypted-media; picture-in-picture";
+  frame.referrerPolicy = "strict-origin-when-cross-origin";
+  frame.allowFullscreen = true;
+  player.appendChild(frame);
+}
 
     document.getElementById("playBtn").onclick = function () {
       play(document.getElementById("ytLink").value.trim());
