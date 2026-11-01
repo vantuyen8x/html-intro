@@ -21,3 +21,15 @@ nav a:hover {
 h1 {
   color: #2a5db0;
 }
+btn {
+  display: inline-block;
+  background: #2a5db0;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  margin-top: 16px;
+}
+.btn:hover {
+  background: #1d4585;
+}
