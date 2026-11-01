@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Giải trí</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <a href="index.html">Trang chủ</a>
+    <a href="entertainment.html">Giải trí</a>
+    <a href="about.html" class="btn">About</a>
+  </nav>
+
+  <h1>Góc giải trí</h1>
+
+  <!-- PHẦN 1: NGHE NHẠC -->
+  <section class="box">
+    <h2>Nghe nhạc YouTube</h2>
+    <p class="muted">Mở YouTube, copy link bài hát, dán vào ô bên dưới.</p>
+    <div class="row">
+      <input id="ytLink" placeholder="https://www.youtube.com/watch?v=...">
+      <button id="playBtn">Phát</button>
+      <button id="saveBtn">Lưu</button>
+    </div>
+    <div id="player"></div>
+
+    <h3>Danh sách đã lưu</h3>
+    <ul id="playlist" class="list"></ul>
+  </section>
+
+  <!-- PHẦN 2: TIN NÓNG -->
+  <section class="box">
+    <h2>Tin nóng</h2>
+    <p class="muted">Nguồn: VnExpress (tin mới nhất)</p>
+    <ul id="news" class="list"><li>Đang tải tin...</li></ul>
+  </section>
+
+  <script>
+    // ---------- NGHE NHẠC ----------
+    function getVideoId(url) {
+      const m = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+      return m ? m[1] : null;
+    }
+
+    function play(url) {
+      const id = getVideoId(url);
+      const player = document.getElementById("player");
+      if (!id) {
+        player.textContent = "Link không hợp lệ, hãy copy lại từ YouTube.";
+        return;
+      }
+      player.innerHTML = "";
+      const frame = document.createElement("iframe");
+      frame.src = "https://www.youtube.com/embed/" + id + "?autoplay=1";
+      frame.allow = "autoplay; encrypted-media";
+      frame.allowFullscreen = true;
+      player.appendChild(frame);
+    }
+
+    function loadSaved() {
+      try { return JSON.parse(localStorage.getItem("songs")) || []; }
+      catch (e) { return []; }
+    }
+
+    function renderPlaylist() {
+      const ul = document.getElementById("playlist");
+      ul.innerHTML = "";
+      const songs = loadSaved();
+      if (songs.length === 0) {
+        ul.innerHTML = "<li class='muted'>Chưa có bài nào.</li>";
+        return;
+      }
+      songs.forEach(function (url, i) {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = "#";
+        a.textContent = "Bài " + (i + 1) + " (" + getVideoId(url) + ")";
+        a.onclick = function (e) { e.preventDefault(); play(url); };
+        const del = document.createElement("button");
+        del.textContent = "Xóa";
+        del.style.marginLeft = "8px";
+        del.onclick = function () {
+          const s = loadSaved(); s.splice(i, 1);
+          localStorage.setItem("songs", JSON.stringify(s));
+          renderPlaylist();
+        };
+        li.append(a, del);
+        ul.appendChild(li);
+      });
+    }
+
+    document.getElementById("playBtn").onclick = function () {
+      play(document.getElementById("ytLink").value.trim());
+    };
+
+    document.getElementById("saveBtn").onclick = function () {
+      const url = document.getElementById("ytLink").value.trim();
+      if (!getVideoId(url)) { alert("Link không hợp lệ"); return; }
+      const s = loadSaved(); s.push(url);
+      localStorage.setItem("songs", JSON.stringify(s));
+      renderPlaylist();
+    };
+
+    renderPlaylist();
+
+    // ---------- TIN NÓNG ----------
+    const rss = "https://vnexpress.net/rss/tin-moi-nhat.rss";
+    fetch("https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(rss))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        const ul = document.getElementById("news");
+        ul.innerHTML = "";
+        data.items.slice(0, 8).forEach(function (item) {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = item.link;
+          a.target = "_blank";
+          a.textContent = item.title;
+          li.appendChild(a);
+          ul.appendChild(li);
+        });
+      })
+      .catch(function () {
+        document.getElementById("news").innerHTML =
+          "<li>Không tải được tin. Thử lại sau, hoặc bấm " +
+          "<a href='https://vnexpress.net' target='_blank'>vào VnExpress</a>.</li>";
+      });
+  </script>
+</body>
+</html>
